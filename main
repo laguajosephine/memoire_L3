@@ -4,3 +4,12 @@ clear
 *on importe la base de données de 2016 avec les gens qui ont répondu en 2013 déjà et les nouveaux actifs occupés
 . import delimited "/Users/manonlabrune/Desktop/L3 éco/S2/recherche /données/csv/lil-1232-2/Csv/individus_ao_rps2016_quetelet.
 > csv", delimiter(";") encoding(utf8) 
+
+*NETTOTAGE*
+*nous gardons les variables qui nous intéressent*
+keep cwlourd cwpostu cwvib sectoxno nuit rpa2a ///
+repete calmer detresse cwvue conflit ///
+min1tag min3edm_c min3edm_d min4tag_c min3edm_f min4tag_e somtbl ///
+min1edm rpa2i rpc1a edm min4edm min2edm min3edm_e ///
+min3edm_g rp10 rp6 rp7a age sexe tchoce tchole rp3b rp4c rp7c rp7b rp7d rp3d ///
+rpa1f rpb1a rpb4a rpb4b rpb4c rpb4d
