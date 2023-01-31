@@ -2,8 +2,7 @@
 cd "/Users/manonlabrune/Desktop/L3 éco/S2/recherche/mémoire"
 clear
 *on importe la base de données de 2016 avec les gens qui ont répondu en 2013 déjà et les nouveaux actifs occupés
-. import delimited "/Users/manonlabrune/Desktop/L3 éco/S2/recherche /données/csv/lil-1232-2/Csv/individus_ao_rps2016_quetelet.
-> csv", delimiter(";") encoding(utf8) 
+import delimited "/Users/manonlabrune/Desktop/L3 éco/S2/recherche /données/csv/lil-1232-2/Csv/individus_ao_rps2016_quetelet.csv", delimiter(";") encoding(utf8) 
 
 *NETTOTAGE*
 *nous gardons les variables qui nous intéressent*
