@@ -18,3 +18,15 @@ rpa1f rpb1a rpb4a rpb4b rpb4c rpb4d
 * étude des NA
 search mdesc *puis télécharger
 mdesc
+
+*remplacer les NA par des 2
+replace min4edm = 2 if min4edm== . 
+replace tchole = 3 if tchole== . 
+replace tchoce = 3 if tchoce== . 
+replace rp7a = 2 if rp7a== . 
+replace rp7b = 2 if rp7b== . 
+replace rp7c = 2 if rp7c== . 
+replace rp7d = 2 if rp7d== . 
+replace rp10 = 2 if rp10== . 
+
+*CREATION DES VARIABLES*
