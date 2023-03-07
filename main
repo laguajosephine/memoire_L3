@@ -33,6 +33,7 @@ replace rp10 = 2 if rp10== .
 
 *pénibilité physique*
 gen pen_phy = 0
+*on associe la valeur 1 à la variable si l'un des critères de pénibilité physique est rempli 
 replace pen_phy = 1 if cwlourd == 1
 replace pen_phy = 1 if cwpostu == 1
 replace pen_phy = 1 if cwvib == 1
@@ -51,6 +52,9 @@ drop cwlourd cwpostu cwvib sectoxno
 gen pen_phy_reforme = 0
 replace pen_phy_reforme = 1 if nuit == 1
 replace pen_phy_reforme = 1 if repete == 1
+
+*compter le nombre d'observations pour donner une idée du nombre de personnes qui ne bénéficient plus du statut de travail pénible après la réforme 
+tab pen_phy_reforme
 
 *drop les variables qui sont désormais inutiles
 drop nuit repete
