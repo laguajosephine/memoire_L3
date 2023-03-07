@@ -120,6 +120,7 @@ replace min2edm = 0 if min2edm == 2 | min2edm == 8 | min2edm == 9
 
 gen depression = rp7a*2 + rp6*2 + rp10*2 + min3edm_g + min3edm_e + min2edm + min4edm + edm
 
+*vérifier que les variables ne se recoupent pas trop 
 *sauvegarder la base de données modifiée 
 save base_memoire_1, replace
 
