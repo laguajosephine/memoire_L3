@@ -30,3 +30,93 @@ replace rp7d = 2 if rp7d== .
 replace rp10 = 2 if rp10== . 
 
 *CREATION DES VARIABLES*
+
+*pénibilité physique*
+gen pen_phy = 0
+replace pen_phy = 1 if cwlourd == 1
+replace pen_phy = 1 if cwpostu == 1
+replace pen_phy = 1 if cwvib == 1
+replace pen_phy = 1 if sectoxno == 1
+replace pen_phy = 1 if nuit == 1
+replace pen_phy = 1 if nuit == 2
+replace pen_phy = 1 if cwlourd == 1
+
+*compter le nombre d'observations
+tab pen_phy
+
+*suppression des variables qui sont désormais inutiles
+drop cwlourd cwpostu cwvib sectoxno 
+
+* pénibilité physique avec les critère après la réforme *
+gen pen_phy_reforme = 0
+replace pen_phy_reforme = 1 if nuit == 1
+replace pen_phy_reforme = 1 if repete == 1
+
+*drop les variables qui sont désormais inutiles
+drop nuit repete
+
+*pénibilité psychologique*
+
+*remplacer les "non" par "0"
+replace calmer = 0 if  calmer == 2
+replace detresse = 0 if  detresse == 2
+replace cwvue = 0 if  cwvue == 2
+replace conflit = 0 if  conflit == 2
+*remplacer les "REFUS" par "0"
+replace calmer = 0 if  calmer == 8
+replace detresse = 0 if  detresse == 8
+replace cwvue = 0 if  cwvue == 8
+replace conflit = 0 if  conflit == 8
+*remplacer les "NSP" par "0"
+replace calmer = 0 if  calmer == 9
+replace detresse = 0 if  detresse == 9
+replace cwvue = 0 if  cwvue == 9
+replace conflit = 0 if  conflit == 9
+
+*création de la variable pen_psy
+gen pen_psy = calmer + detresse + cwvue + conflit
+replace pen_psy = 0 if pen_psy < 3
+replace pen_psy = 1 if pen_psy >= 3
+
+
+*drop les variables qui sont désormais inutiles
+drop calmer detresse cwvue conflit
+
+* création des variables de santé mentale *
+
+* anxiété*
+gen anxiete = 0
+replace anxiete = 1 if min1tag == 1
+replace anxiete = 1 if min3edm_c == 1
+replace anxiete = 1 if min3edm_d == 1
+replace anxiete = 1 if min4tag_c == 1
+replace anxiete = 1 if min3edm_f == 1
+replace anxiete = 1 if min4tag_e == 1
+replace anxiete = 1 if somtbl == 2
+replace anxiete = 1 if somtbl == 3
+replace anxiete = 1 if somtbl == 4
+
+* trouble de l'humeur*
+gen humeur = 0
+replace humeur = 1 if min1edm == 1
+replace humeur = 1 if rpa2i == 1
+replace humeur = 1 if rpa2i == 2
+replace humeur = 1 if rpc1a == 6
+replace humeur = 1 if rpc1a == 5
+replace humeur = 1 if rpc1a == 4
+
+* dépression majeure*
+
+*remplacer les "NSP", "NON", "REFUS" et observations manquantes par des "0"
+replace rp7a = 0 if rp7a == 2 | rp7a == 8 | rp7a == 9 
+replace rp6 = 0 if rp6 == 2 | rp6 == 8 
+replace rp10 = 0 if rp10 == 2 | rp10 == 9
+replace min4edm = 0 if min4edm == 2 | min4edm == 8 | min4edm == 9 
+replace min2edm = 0 if min2edm == 2 | min2edm == 8 | min2edm == 9 
+
+gen depression = rp7a*2 + rp6*2 + rp10*2 + min3edm_g + min3edm_e + min2edm + min4edm + edm
+
+*sauvegarder la base de données modifiée 
+save base_memoire_1, replace
+
+* groupe de controle : ceux avec un travail toujours considéré comme pénible en 2019*
