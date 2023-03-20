@@ -124,4 +124,24 @@ gen depression = rp7a*2 + rp6*2 + rp10*2 + min3edm_g + min3edm_e + min2edm + min
 *sauvegarder la base de données modifiée 
 save base_memoire_1, replace
 
-* groupe de controle : ceux avec un travail toujours considéré comme pénible en 2019*
+*stat descriptive*
+
+tab pen_phy
+tab pen_psy
+
+tab anxiete
+tab humeur
+tab depression
+hist depression, percent by(pen_phy)
+hist depression, by(pen_psy)
+
+graph bar humeur anxiete depression, over(pen_phy) asyvars bar(1, color(lavender)) bar(2, color(emerald)) bar(3, color(teal)) 
+
+* régression
+regress anxiete pen_phy
+regress humeur pen_phy
+regress depression pen_phy
+
+gen depression2 = depression if depression > 6
+regress depression2 pen_phy
+
