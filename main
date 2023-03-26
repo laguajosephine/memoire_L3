@@ -6,12 +6,12 @@ import delimited "/Users/manonlabrune/Desktop/L3 éco/S2/recherche /données/csv
 
 *NETTOYAGE*
 *nous gardons les variables qui nous intéressent*
-keep cwlourd cwpostu cwvib sectoxno nuit rpa2a ///
+keep cwlourd cwpostu cwvib sectoxno nuit ///
 repete calmer detresse cwvue conflit ///
 min1tag min3edm_c min3edm_d min4tag_c min3edm_f min4tag_e somtbl ///
 min1edm rpa2i rpc1a edm min4edm min2edm min3edm_e ///
 min3edm_g rp10 rp6 rp7a age sexe tchoce tchole rp3b rp4c rp7c rp7b rp7d rp3d ///
-rpa1f rpb1a rpb4a rpb4b rpb4c rpb4d
+rpa1f rpb1a rpb4a rpb4b rpb4c rpb4d rp4b rp3c
 
 *sauvegarder la base
 
@@ -135,13 +135,84 @@ tab depression
 hist depression, percent by(pen_phy)
 hist depression, by(pen_psy)
 
-graph bar humeur anxiete depression, over(pen_phy) asyvars bar(1, color(lavender)) bar(2, color(emerald)) bar(3, color(teal)) 
+label variable pen_phy "Pénibilité physique"
+label variable anxiete "Anxiété"
+label variable humeur "Trouble de l'humeur"
+label variable depression "Dépression"
+graph bar humeur anxiete depression, over(pen_phy) asyvars ///
+bar(1, color(lavender)) bar(2, color(emerald)) bar(3, color(teal)) ///
+title("Moyenne des variables de santé mentale" "en fonction de la pénibilité physique", size(medium))
+graph bar humeur anxiete depression, over(pen_psy) asyvars ///
+bar(1, color(sienna)) bar(2, color(orange_red)) bar(3, color(cranberry)) ///
+title("Moyenne des variables de santé mentale" "en fonction de la pénibilité psychologique", size(medium))
+
+*pour la causalité plus tard: les femmes ont en moyenne plus de soucis de santé mentale
+graph bar humeur anxiete depression, over(sexe) asyvars ///
+bar(1, color(dkorange)) bar(2, color(maroon)) bar(3, color(red)) ///
+title("Moyenne des variables de santé mentale" "en fonction du sexe", size(medium))
+
+* pour la causalité plus tard: les personnes ayant vécu des périodes de chômage ont plus de problème de santé mentale
+replace tchole = 3 if tchole == 9
+graph bar humeur anxiete depression, over(tchole) asyvars ///
+bar(1, color(sand)) bar(2, color(olive_teal)) bar(3, color(navy)) ///
+title("Moyenne des variables de santé mentale" "en fonction des périodes de chômage", size(medium))
+
+*correlation
+correlate pen_phy depression
 
 * régression
 regress anxiete pen_phy
 regress humeur pen_phy
 regress depression pen_phy
 
-gen depression2 = depression if depression > 6
-regress depression2 pen_phy
+twoway (scatter depression pen_phy) (lfit depression pen_phy)
+
+* création des variables de contrôle
+
+* chômage
+gen chomage = 0
+replace chomage = 1 if tchole == 1
+replace chomage = 1 if tchole == 2
+replace chomage = 1 if tchoce == 1
+replace chomage = 1 if tchoce == 2
+
+drop tchole tchoce
+
+* santé mentale exogène
+
+gen causes_exogenes = 0
+replace causes_exogenes = 1 if rp3b == 1
+replace causes_exogenes = 1 if rp3d == 1
+*replace causes_exogenes = 1 if rp4b == 1
+*replace causes_exogenes = 1 if rp3c == 1
+replace causes_exogenes = 1 if rp4c == 1
+replace causes_exogenes = 1 if rp7c == 1
+replace causes_exogenes = 1 if rp7b == 1
+replace causes_exogenes = 1 if rp7d == 1
+
+drop rp3b rp3d rp4c rp7c rp7b rp7d 
+*rp4b rp3c*
+
+*pénibilité due à l'environement
+gen environnement = 0
+replace environnement = 1 if rpa1f == 1
+replace environnement = 1 if rpa1f == 2
+replace environnement = 1 if rpb1a == 1
+replace environnement = 1 if rpb4a == 1
+replace environnement = 1 if rpb4b == 1
+replace environnement = 1 if rpb4c == 1
+replace environnement = 1 if rpb4d == 1
+
+drop rpa1f rpb1a rpb4a rpb4b rpb4c rpb4d
+
+*regressions avec variables de controle
+regress depression pen_phy sexe chomage causes_exogenes environnement
+regress humeur pen_phy sexe chomage causes_exogenes environnement
+regress anxiete pen_phy sexe chomage causes_exogenes environnement
+
+regress depression pen_psy sexe chomage causes_exogenes environnement
+regress humeur pen_psy sexe chomage causes_exogenes environnement
+regress anxiete pen_psy sexe chomage causes_exogenes environnement
+
+
 
