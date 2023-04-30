@@ -4,21 +4,22 @@ clear
 *on importe la base de données de 2016 avec les gens qui ont répondu en 2013 déjà et les nouveaux actifs occupés
 import delimited "/Users/manonlabrune/Desktop/L3 éco/S2/recherche /données/csv/lil-1232-2/Csv/individus_ao_rps2016_quetelet.csv", delimiter(";") encoding(utf8) 
 
-*NETTOYAGE*
+*NETTOTAGE*
 *nous gardons les variables qui nous intéressent*
 keep cwlourd cwpostu cwvib sectoxno nuit ///
 repete calmer detresse cwvue conflit ///
 min1tag min3edm_c min3edm_d min4tag_c min3edm_f min4tag_e somtbl ///
 min1edm rpa2i rpc1a edm min4edm min2edm min3edm_e ///
 min3edm_g rp10 rp6 rp7a age sexe tchoce tchole rp3b rp4c rp7c rp7b rp7d rp3d ///
-rpa1f rpb1a rpb4a rpb4b rpb4c rpb4d rp4b rp3c
+rpa1f rpb1a rpb4a rpb4b rpb4c rpb4d rp4b rp3c revannu nbenf18p ///
+nbenf3a17 nbenfm3 etamatri
 
-*sauvegarder la base
+*sauvegarder la nouvelle base de données
+save base_memoire_1, replace
 
-* étude des NA
-search mdesc *puis télécharger
-mdesc
-
+*étude des NA
+search mdesc
+mdesc 
 *remplacer les NA par des 2
 replace min4edm = 2 if min4edm== . 
 replace tchole = 3 if tchole== . 
@@ -33,7 +34,6 @@ replace rp10 = 2 if rp10== .
 
 *pénibilité physique*
 gen pen_phy = 0
-*on associe la valeur 1 à la variable si l'un des critères de pénibilité physique est rempli 
 replace pen_phy = 1 if cwlourd == 1
 replace pen_phy = 1 if cwpostu == 1
 replace pen_phy = 1 if cwvib == 1
@@ -45,18 +45,12 @@ replace pen_phy = 1 if cwlourd == 1
 *compter le nombre d'observations
 tab pen_phy
 
+*statistiques descriptives
+*pénibilité physique par rapport au sexe de l'individu
+graph bar pen_phy, over(sexe) asyvars bar(1, color(lavender)) bar(2, color(red))
+
 *suppression des variables qui sont désormais inutiles
 drop cwlourd cwpostu cwvib sectoxno 
-
-* pénibilité physique avec les critère après la réforme *
-gen pen_phy_reforme = 0
-replace pen_phy_reforme = 1 if nuit == 1
-replace pen_phy_reforme = 1 if repete == 1
-
-*compter le nombre d'observations pour donner une idée du nombre de personnes qui ne bénéficient plus du statut de travail pénible après la réforme 
-tab pen_phy_reforme
-
-*drop les variables qui sont désormais inutiles
 drop nuit repete
 
 *pénibilité psychologique*
@@ -82,6 +76,9 @@ gen pen_psy = calmer + detresse + cwvue + conflit
 replace pen_psy = 0 if pen_psy < 3
 replace pen_psy = 1 if pen_psy >= 3
 
+*statistiques descriptives
+*pénibilité psychologique par rapport au sexe de l'individu
+graph bar pen_psy, over(sexe) asyvars bar(1, color(lavender)) bar(2, color(red))
 
 *drop les variables qui sont désormais inutiles
 drop calmer detresse cwvue conflit
@@ -91,23 +88,36 @@ drop calmer detresse cwvue conflit
 * anxiété*
 gen anxiete = 0
 replace anxiete = 1 if min1tag == 1
-replace anxiete = 1 if min3edm_c == 1
-replace anxiete = 1 if min3edm_d == 1
-replace anxiete = 1 if min4tag_c == 1
-replace anxiete = 1 if min3edm_f == 1
-replace anxiete = 1 if min4tag_e == 1
-replace anxiete = 1 if somtbl == 2
-replace anxiete = 1 if somtbl == 3
-replace anxiete = 1 if somtbl == 4
+replace anxiete = anxiete + 1 if min3edm_c == 1
+replace anxiete = anxiete + 1 if min3edm_d == 1
+replace anxiete = anxiete + 1 if min4tag_c == 1
+replace anxiete = anxiete + 1 if min3edm_f == 1
+replace anxiete = anxiete + 1 if min4tag_e == 1
+replace anxiete = anxiete + 1 if somtbl == 2
+replace anxiete = anxiete + 1 if somtbl == 3
+replace anxiete = anxiete + 1 if somtbl == 4
+
+gen anxiete_dummy = 0
+replace anxiete_dummy = 1 if anxiete >= 3
+
+*supprimer les variables qui nous interessent plus
+drop min1tag min3edm_c min3edm_d min4tag_c min3edm_f min4tag_e somtbl
 
 * trouble de l'humeur*
 gen humeur = 0
 replace humeur = 1 if min1edm == 1
-replace humeur = 1 if rpa2i == 1
-replace humeur = 1 if rpa2i == 2
-replace humeur = 1 if rpc1a == 6
-replace humeur = 1 if rpc1a == 5
-replace humeur = 1 if rpc1a == 4
+replace humeur = humeur + 1 if rpa2i == 1
+replace humeur = humeur + 1 if rpa2i == 2
+replace humeur = humeur + 1 if rpc1a == 6
+replace humeur = humeur + 1 if rpc1a == 5
+replace humeur = humeur + 1 if rpc1a == 4
+
+gen humeur_dummy = 0
+replace humeur_dummy = 1 if humeur >= 1
+
+
+*supprimer les variables qui nous interessent plus
+drop min1edm rpa2i rpc1a
 
 * dépression majeure*
 
@@ -120,29 +130,28 @@ replace min2edm = 0 if min2edm == 2 | min2edm == 8 | min2edm == 9
 
 gen depression = rp7a*2 + rp6*2 + rp10*2 + min3edm_g + min3edm_e + min2edm + min4edm + edm
 
-*vérifier que les variables ne se recoupent pas trop 
+gen depression_dummy = 0
+replace depression_dummy = 1 if depression > 6
+
+*supprimer les variables qui nous interessent plus
+drop rp7a rp6 rp10 min4edm min2edm edm min3edm_e min3edm_g
+
 *sauvegarder la base de données modifiée 
 save base_memoire_1, replace
 
-*stat descriptive*
-
-tab pen_phy
-tab pen_psy
-
-tab anxiete
-tab humeur
-tab depression
-hist depression, percent by(pen_phy)
-hist depression, by(pen_psy)
+*STATISTICS DESCRIPTIVE
 
 label variable pen_phy "Pénibilité physique"
-label variable anxiete "Anxiété"
-label variable humeur "Trouble de l'humeur"
-label variable depression "Dépression"
-graph bar humeur anxiete depression, over(pen_phy) asyvars ///
+label variable pen_psy "Pénibilité psychologique"
+label variable anxiete_dummy "Anxiété"
+label variable humeur_dummy "Trouble de l'humeur"
+label variable depression_dummy "Dépression"
+
+graph bar humeur_dummy anxiete_dummy depression_dummy, over(pen_phy) asyvars ///
 bar(1, color(lavender)) bar(2, color(emerald)) bar(3, color(teal)) ///
 title("Moyenne des variables de santé mentale" "en fonction de la pénibilité physique", size(medium))
-graph bar humeur anxiete depression, over(pen_psy) asyvars ///
+
+graph bar humeur_dummy anxiete_dummy depression_dummy, over(pen_psy) asyvars ///
 bar(1, color(sienna)) bar(2, color(orange_red)) bar(3, color(cranberry)) ///
 title("Moyenne des variables de santé mentale" "en fonction de la pénibilité psychologique", size(medium))
 
@@ -160,12 +169,16 @@ title("Moyenne des variables de santé mentale" "en fonction des périodes de ch
 *correlation
 correlate pen_phy depression
 
-* régression
-regress anxiete pen_phy
-regress humeur pen_phy
-regress depression pen_phy
+* premières régressions sans variables de contrôle 
+regress anxiete_dummy pen_phy
+regress anxiete_dummy pen_psy
 
-twoway (scatter depression pen_phy) (lfit depression pen_phy)
+regress humeur_dummy pen_phy
+regress humeur_dummy pen_psy
+
+regress depression_dummy pen_phy
+regress depression_dummy pen_psy
+
 
 * création des variables de contrôle
 
@@ -183,15 +196,14 @@ drop tchole tchoce
 gen causes_exogenes = 0
 replace causes_exogenes = 1 if rp3b == 1
 replace causes_exogenes = 1 if rp3d == 1
-*replace causes_exogenes = 1 if rp4b == 1
-*replace causes_exogenes = 1 if rp3c == 1
+replace causes_exogenes = 1 if rp4b == 1
+replace causes_exogenes = 1 if rp3c == 1
 replace causes_exogenes = 1 if rp4c == 1
 replace causes_exogenes = 1 if rp7c == 1
 replace causes_exogenes = 1 if rp7b == 1
 replace causes_exogenes = 1 if rp7d == 1
 
-drop rp3b rp3d rp4c rp7c rp7b rp7d 
-*rp4b rp3c*
+drop rp3b rp3d rp4c rp7c rp7b rp7d rp4b rp3c
 
 *pénibilité due à l'environement
 gen environnement = 0
@@ -205,14 +217,143 @@ replace environnement = 1 if rpb4d == 1
 
 drop rpa1f rpb1a rpb4a rpb4b rpb4c rpb4d
 
-*regressions avec variables de controle
-regress depression pen_phy sexe chomage causes_exogenes environnement
-regress humeur pen_phy sexe chomage causes_exogenes environnement
-regress anxiete pen_phy sexe chomage causes_exogenes environnement
+* salaire -> impossible car trop de NA
+drop revannu
 
-regress depression pen_psy sexe chomage causes_exogenes environnement
-regress humeur pen_psy sexe chomage causes_exogenes environnement
-regress anxiete pen_psy sexe chomage causes_exogenes environnement
+*nombre d'enfants
+gen enfants = nbenfm3 + nbenf3a17 + nbenf18p
+drop nbenfm3 nbenf3a17 nbenf18p
+
+*statut matrimonial -> etamatri
+
+*sauvegarder la base de données modifiée 
+save base_memoire_1, replace
+
+* REGRESSIONS 
+quietly regress humeur_dummy pen_phy 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress humeur_dummy pen_phy sexe 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress humeur_dummy pen_phy sexe chomage 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress humeur_dummy pen_phy sexe chomage causes_exogenes 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress humeur_dummy pen_phy sexe chomage causes_exogenes environnement 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress humeur_dummy pen_phy sexe chomage causes_exogenes environnement enfants
+outreg2 using "tableaux_regression.txt", replace
+
+quietly regress anxiete_dummy pen_phy 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress anxiete_dummy pen_phy sexe 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress anxiete_dummy pen_phy sexe chomage 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress anxiete_dummy pen_phy sexe chomage causes_exogenes 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress anxiete_dummy pen_phy sexe chomage causes_exogenes environnement 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress anxiete_dummy pen_phy sexe chomage causes_exogenes environnement enfants
+outreg2 using "tableaux_regression.txt", replace
+
+quietly regress depression_dummy pen_phy 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress depression_dummy pen_phy sexe 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress depression_dummy pen_phy sexe chomage 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress depression_dummy pen_phy sexe chomage causes_exogenes 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress depression_dummy pen_phy sexe chomage causes_exogenes environnement 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress depression_dummy pen_phy sexe chomage causes_exogenes environnement enfants
+outreg2 using "tableaux_regression.txt", replace
+
+quietly regress humeur_dummy pen_psy 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress humeur_dummy pen_psy sexe 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress humeur_dummy pen_psy sexe chomage 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress humeur_dummy pen_psy sexe chomage causes_exogenes 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress humeur_dummy pen_psy sexe chomage causes_exogenes environnement 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress humeur_dummy pen_psy sexe chomage causes_exogenes environnement enfants
+outreg2 using "tableaux_regression.txt", replace
+
+quietly regress anxiete_dummy pen_psy 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress anxiete_dummy pen_psy sexe 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress anxiete_dummy pen_psy sexe chomage 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress anxiete_dummy pen_psy sexe chomage causes_exogenes 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress anxiete_dummy pen_psy sexe chomage causes_exogenes environnement 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress anxiete_dummy pen_psy sexe chomage causes_exogenes environnement enfants
+outreg2 using "tableaux_regression.txt", replace
+
+quietly regress depression_dummy pen_psy 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress depression_dummy pen_psy sexe 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress depression_dummy pen_psy sexe chomage 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress depression_dummy pen_psy sexe chomage causes_exogenes 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress depression_dummy pen_psy sexe chomage causes_exogenes environnement 
+outreg2 using "tableaux_regression.txt", replace
+quietly regress depression_dummy pen_psy sexe chomage causes_exogenes environnement enfants
+outreg2 using "tableaux_regression.txt", replace
+
+*causalité
+*-> tranche d'age
+
+tab age
+gen tranches_age = " "
+replace tranches_age = "15-25" if age <= 35
+replace tranches_age = "26-40" if age > 25 & age <= 40
+replace tranches_age = "41-55" if age > 40 & age <= 55
+replace tranches_age = "plus de 55 ans" if age > 55
+
+* effets de la pénibilité sur la santé mentale selon les tranches d'âge
+
+regress humeur_dummy pen_psy sexe chomage causes_exogenes environnement enfants if tranches_age == "15-25"
+regress humeur_dummy pen_phy sexe chomage causes_exogenes environnement enfants if tranches_age == "15-25"
+
+regress humeur_dummy pen_psy sexe chomage causes_exogenes environnement enfants if tranches_age == "26-40"
+regress humeur_dummy pen_phy sexe chomage causes_exogenes environnement enfants if tranches_age == "26-40"
+
+regress humeur_dummy pen_psy sexe chomage causes_exogenes environnement enfants if tranches_age == "41-55"
+regress humeur_dummy pen_phy sexe chomage causes_exogenes environnement enfants if tranches_age == "41-55"
+
+regress humeur_dummy pen_psy sexe chomage causes_exogenes environnement enfants if tranches_age == "plus de 55 ans"
+regress humeur_dummy pen_phy sexe chomage causes_exogenes environnement enfants if tranches_age == "plus de 55 ans"
 
 
+regress anxiete_dummy pen_psy sexe chomage causes_exogenes environnement enfants if tranches_age == "15-25"
+regress anxiete_dummy pen_phy sexe chomage causes_exogenes environnement enfants if tranches_age == "15-25"
 
+regress anxiete_dummy pen_psy sexe chomage causes_exogenes environnement enfants if tranches_age == "26-40"
+regress anxiete_dummy pen_phy sexe chomage causes_exogenes environnement enfants if tranches_age == "26-40"
+
+regress anxiete_dummy pen_psy sexe chomage causes_exogenes environnement enfants if tranches_age == "41-55"
+regress anxiete_dummy pen_phy sexe chomage causes_exogenes environnement enfants if tranches_age == "41-55"
+
+regress anxiete_dummy pen_psy sexe chomage causes_exogenes environnement enfants if tranches_age == "plus de 55 ans"
+regress anxiete_dummy pen_phy sexe chomage causes_exogenes environnement enfants if tranches_age == "plus de 55 ans"
+
+
+regress depression_dummy pen_psy sexe chomage causes_exogenes environnement enfants if tranches_age == "15-25"
+regress depression_dummy pen_phy sexe chomage causes_exogenes environnement enfants if tranches_age == "15-25"
+
+regress depression_dummy pen_psy sexe chomage causes_exogenes environnement enfants if tranches_age == "26-40"
+regress depression_dummy pen_phy sexe chomage causes_exogenes environnement enfants if tranches_age == "26-40"
+
+regress depression_dummy pen_psy sexe chomage causes_exogenes environnement enfants if tranches_age == "41-55"
+regress depression_dummy pen_phy sexe chomage causes_exogenes environnement enfants if tranches_age == "41-55"
+
+regress depression_dummy pen_psy sexe chomage causes_exogenes environnement enfants if tranches_age == "plus de 55 ans"
+regress depression_dummy pen_phy sexe chomage causes_exogenes environnement enfants if tranches_age == "plus de 55 ans"
