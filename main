@@ -78,7 +78,7 @@ replace pen_psy = 1 if pen_psy >= 3
 
 *statistiques descriptives
 *pénibilité psychologique par rapport au sexe de l'individu
-graph bar pen_psy, over(sexe) asyvars bar(1, color(lavender)) bar(2, color(red))
+*graph bar pen_psy, over(sexe) asyvars bar(1, color(lavender)) bar(2, color(red))
 
 *drop les variables qui sont désormais inutiles
 drop calmer detresse cwvue conflit
@@ -146,6 +146,25 @@ label variable pen_psy "Pénibilité psychologique"
 label variable anxiete_dummy "Anxiété"
 label variable humeur_dummy "Trouble de l'humeur"
 label variable depression_dummy "Dépression"
+
+graph bar, over(sexe, relabel(1 "Homme" 2 "Femme")) asyvars ///
+bar(1, color(sand)) bar(2, color(olive_teal)) ///
+title("Répartition de la population en fonction du genre")
+
+gen tranches_ageInsee = " "
+replace tranches_ageInsee = "15-24" if age <= 24
+replace tranches_ageInsee = "25-49" if age >= 25 & age <= 49
+replace tranches_ageInsee = "50-64" if age > 49 & age <= 64
+replace tranches_ageInsee = "plus de 65 ans" if age >= 65
+graph bar (percent), over(tranches_ageInsee) bar(1, color(sand)) title("Distribution des tranches d'âge")
+
+
+histogram humeur_dummy, percent bin(10) name(histD1) xlab(0 "Absence de troubles de l'humeur" 1 "Troubles de l'humeur") barwidth(0.5) color(eltgreen) 
+histogram anxiete_dummy, percent bin(10) name(histD2) xlab(0 "Non anxieux" 1 "Anxieux") barwidth(0.5) color(ltkhaki) 
+histogram depression_dummy, percent bin(10) name(histD3) xlab(0 "Non dépressif" 1 "Dépressif") barwidth(0.5) color(olive_teal ) 
+
+graph combine histD1 histD2 histD3, xsize(10) ysize(5) title("Répartition des différents troubles mentaux dans la population")
+
 
 graph bar humeur_dummy anxiete_dummy depression_dummy, over(pen_phy) asyvars ///
 bar(1, color(lavender)) bar(2, color(emerald)) bar(3, color(teal)) ///
@@ -313,7 +332,7 @@ outreg2 using "tableaux_regression.txt", replace
 
 tab age
 gen tranches_age = " "
-replace tranches_age = "15-25" if age <= 35
+replace tranches_age = "15-25" if age <= 25
 replace tranches_age = "26-40" if age > 25 & age <= 40
 replace tranches_age = "41-55" if age > 40 & age <= 55
 replace tranches_age = "plus de 55 ans" if age > 55
