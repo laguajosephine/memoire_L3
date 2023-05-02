@@ -45,10 +45,6 @@ replace pen_phy = 1 if cwlourd == 1
 *compter le nombre d'observations
 tab pen_phy
 
-*statistiques descriptives
-*pénibilité physique par rapport au sexe de l'individu
-graph bar pen_phy, over(sexe) asyvars bar(1, color(lavender)) bar(2, color(red))
-
 *suppression des variables qui sont désormais inutiles
 drop cwlourd cwpostu cwvib sectoxno 
 drop nuit repete
@@ -76,10 +72,6 @@ gen pen_psy = calmer + detresse + cwvue + conflit
 replace pen_psy = 0 if pen_psy < 3
 replace pen_psy = 1 if pen_psy >= 3
 
-*statistiques descriptives
-*pénibilité psychologique par rapport au sexe de l'individu
-*graph bar pen_psy, over(sexe) asyvars bar(1, color(lavender)) bar(2, color(red))
-
 *drop les variables qui sont désormais inutiles
 drop calmer detresse cwvue conflit
 
@@ -100,7 +92,7 @@ replace anxiete = anxiete + 1 if somtbl == 4
 gen anxiete_dummy = 0
 replace anxiete_dummy = 1 if anxiete >= 3
 
-*supprimer les variables qui nous interessent plus
+*supprimer les variables qui ne nous interessent plus
 drop min1tag min3edm_c min3edm_d min4tag_c min3edm_f min4tag_e somtbl
 
 * trouble de l'humeur*
@@ -115,8 +107,7 @@ replace humeur = humeur + 1 if rpc1a == 4
 gen humeur_dummy = 0
 replace humeur_dummy = 1 if humeur >= 1
 
-
-*supprimer les variables qui nous interessent plus
+*supprimer les variables qui ne nous interessent plus
 drop min1edm rpa2i rpc1a
 
 * dépression majeure*
@@ -133,7 +124,7 @@ gen depression = rp7a*2 + rp6*2 + rp10*2 + min3edm_g + min3edm_e + min2edm + min
 gen depression_dummy = 0
 replace depression_dummy = 1 if depression > 6
 
-*supprimer les variables qui nous interessent plus
+*supprimer les variables qui ne nous interessent plus
 drop rp7a rp6 rp10 min4edm min2edm edm min3edm_e min3edm_g
 
 *sauvegarder la base de données modifiée 
@@ -147,10 +138,12 @@ label variable anxiete_dummy "Anxiété"
 label variable humeur_dummy "Trouble de l'humeur"
 label variable depression_dummy "Dépression"
 
+*répartition femme/homme
 graph bar, over(sexe, relabel(1 "Homme" 2 "Femme")) asyvars ///
 bar(1, color(sand)) bar(2, color(olive_teal)) ///
 title("Répartition de la population en fonction du genre")
 
+*répartition tranches d'âge
 gen tranches_ageInsee = " "
 replace tranches_ageInsee = "15-24" if age <= 24
 replace tranches_ageInsee = "25-49" if age >= 25 & age <= 49
@@ -158,18 +151,19 @@ replace tranches_ageInsee = "50-64" if age > 49 & age <= 64
 replace tranches_ageInsee = "plus de 65 ans" if age >= 65
 graph bar (percent), over(tranches_ageInsee) bar(1, color(sand)) title("Distribution des tranches d'âge")
 
-
+*histogrammes variables de santé mentale dans l'échantillon
 histogram humeur_dummy, percent bin(10) name(histD1) xlab(0 "Absence de troubles de l'humeur" 1 "Troubles de l'humeur") barwidth(0.5) color(eltgreen) 
 histogram anxiete_dummy, percent bin(10) name(histD2) xlab(0 "Non anxieux" 1 "Anxieux") barwidth(0.5) color(ltkhaki) 
 histogram depression_dummy, percent bin(10) name(histD3) xlab(0 "Non dépressif" 1 "Dépressif") barwidth(0.5) color(olive_teal ) 
 
 graph combine histD1 histD2 histD3, xsize(10) ysize(5) title("Répartition des différents troubles mentaux dans la population")
 
-
+* moyennes des variables de santé mentale en fonction de la pénibilité physique 
 graph bar humeur_dummy anxiete_dummy depression_dummy, over(pen_phy) asyvars ///
 bar(1, color(lavender)) bar(2, color(emerald)) bar(3, color(teal)) ///
 title("Moyenne des variables de santé mentale" "en fonction de la pénibilité physique", size(medium))
 
+* moyennes des variables de santé mentale en fonction de la pénibilité psychologique
 graph bar humeur_dummy anxiete_dummy depression_dummy, over(pen_psy) asyvars ///
 bar(1, color(sienna)) bar(2, color(orange_red)) bar(3, color(cranberry)) ///
 title("Moyenne des variables de santé mentale" "en fonction de la pénibilité psychologique", size(medium))
@@ -184,20 +178,6 @@ replace tchole = 3 if tchole == 9
 graph bar humeur anxiete depression, over(tchole) asyvars ///
 bar(1, color(sand)) bar(2, color(olive_teal)) bar(3, color(navy)) ///
 title("Moyenne des variables de santé mentale" "en fonction des périodes de chômage", size(medium))
-
-*correlation
-correlate pen_phy depression
-
-* premières régressions sans variables de contrôle 
-regress anxiete_dummy pen_phy
-regress anxiete_dummy pen_psy
-
-regress humeur_dummy pen_phy
-regress humeur_dummy pen_psy
-
-regress depression_dummy pen_phy
-regress depression_dummy pen_psy
-
 
 * création des variables de contrôle
 
@@ -248,7 +228,7 @@ drop nbenfm3 nbenf3a17 nbenf18p
 *sauvegarder la base de données modifiée 
 save base_memoire_1, replace
 
-* REGRESSIONS 
+* REGRESSIONS -> Nous avons créé les tableaux de régressions manuellement 
 quietly regress humeur_dummy pen_phy 
 outreg2 using "tableaux_regression.txt", replace
 quietly regress humeur_dummy pen_phy sexe 
@@ -327,8 +307,7 @@ outreg2 using "tableaux_regression.txt", replace
 quietly regress depression_dummy pen_psy sexe chomage causes_exogenes environnement enfants
 outreg2 using "tableaux_regression.txt", replace
 
-*causalité
-*-> tranche d'age
+*effets de la pénibilité sur la santé mentale selon les tranches d'âge
 
 tab age
 gen tranches_age = " "
@@ -336,8 +315,6 @@ replace tranches_age = "15-25" if age <= 25
 replace tranches_age = "26-40" if age > 25 & age <= 40
 replace tranches_age = "41-55" if age > 40 & age <= 55
 replace tranches_age = "plus de 55 ans" if age > 55
-
-* effets de la pénibilité sur la santé mentale selon les tranches d'âge
 
 regress humeur_dummy pen_psy sexe chomage causes_exogenes environnement enfants if tranches_age == "15-25"
 regress humeur_dummy pen_phy sexe chomage causes_exogenes environnement enfants if tranches_age == "15-25"
@@ -376,3 +353,42 @@ regress depression_dummy pen_phy sexe chomage causes_exogenes environnement enfa
 
 regress depression_dummy pen_psy sexe chomage causes_exogenes environnement enfants if tranches_age == "plus de 55 ans"
 regress depression_dummy pen_phy sexe chomage causes_exogenes environnement enfants if tranches_age == "plus de 55 ans"
+
+*robustesse: modification des seuils
+
+gen humeur2 = 0
+replace humeur2 = 1 if humeur > 2
+
+gen anxiete2 = 0
+replace anxiete2 = 1 if anxiete > 3
+
+gen depression2 = 0
+replace depression2 = 1 if depression > 8
+
+*-> régressions avec les nouvelles variables 
+regress humeur2 pen_psy sexe chomage causes_exogenes environnement enfants 
+regress humeur2 pen_phy sexe chomage causes_exogenes environnement enfants 
+
+regress anxiete2 pen_psy sexe chomage causes_exogenes environnement enfants 
+regress anxiete2 pen_phy sexe chomage causes_exogenes environnement enfants 
+
+regress depression2 pen_psy sexe chomage causes_exogenes environnement enfants 
+regress depression2 pen_phy sexe chomage causes_exogenes environnement enfants 
+
+* résultats différents pour plusieurs critères de pénibilité?
+gen penphy2 = 0
+replace penphy2 = penphy2 + 1 if cwlourd == 1
+replace penphy2 = penphy2 + 1 if cwpostu == 1
+replace penphy2 = penphy2 + 1 if cwvib == 1
+replace penphy2 = penphy2 + 1 if sectoxno == 1
+replace penphy2 = penphy2 + 1 if nuit == 1
+replace penphy2 = penphy2 + 1 if nuit == 2
+replace penphy2 = penphy2 + 1 if cwlourd == 1
+
+gen penphy2dummy = 0
+replace penphy2dummy = 1 if penphy2 > 2
+
+regress humeur_dummy penphy2dummy sexe chomage causes_exogenes environnement enfants
+regress anxiete_dummy penphy2dummy sexe chomage causes_exogenes environnement enfants
+regress depression_dummy penphy2dummy sexe chomage causes_exogenes environnement enfants
+
